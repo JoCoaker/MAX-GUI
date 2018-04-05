@@ -40,7 +40,7 @@ public class Game extends JFrame implements ActionListener, KeyListener {
         board = new Board();
         playerIndex = new Random().nextInt(Config.PLAYER_NAMES.length);
 
-        setTitle("Max - Spaß mit brüchen");
+        setTitle("Max - Spass mit Bruechen");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         setLayout(new BorderLayout());

@@ -21,7 +21,7 @@ public class Winner extends JFrame implements ActionListener {
      * @param winner {Player}
      */
     public Winner(Player winner) {
-        setTitle("Max - Spaß mit brüchen");
+        setTitle("Max - Spass mit Bruechen");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getContentPane().setLayout(new GridLayout(4, 1));
         JLabel label = new JLabel("Herzlichen Glueckwunsch \"" + winner.getName() + "\"", SwingConstants.CENTER);

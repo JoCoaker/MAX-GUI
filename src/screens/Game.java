@@ -5,13 +5,13 @@ import components.Player;
 import utility.Config;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.File;
-import java.io.Serializable;
+import java.io.*;
 import java.util.Random;
 
 /**
@@ -20,7 +20,7 @@ import java.util.Random;
  * @author Daniel Banciu (198632), Felix Ruess (199261), Lukas Reichert (199034)
  * @version 3.0
  */
-public class Game extends JFrame implements ActionListener, KeyListener, Serializable {
+public class Game extends JFrame implements ActionListener, KeyListener {
 
     private Board board;
     private int playerIndex;
@@ -38,9 +38,17 @@ public class Game extends JFrame implements ActionListener, KeyListener, Seriali
      * Game Konstruktor.
      */
     public Game() {
+        this(new Board(), new Random().nextInt(Config.PLAYER_NAMES.length));
+    }
+
+    /**
+     * Game Konstruktor.
+     * Fuer die Seralizierung.
+     */
+    public Game(Board board, int playerIndex) {
         // screens.Game code
-        board = new Board();
-        playerIndex = new Random().nextInt(Config.PLAYER_NAMES.length);
+        this.board = board;
+        this.playerIndex = playerIndex;
 
         setTitle("Max - Spass mit Bruechen");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -214,7 +222,10 @@ public class Game extends JFrame implements ActionListener, KeyListener, Seriali
     /**
      * Klasse um die Eingabe in dem Menue zu verarbeiten.
      */
-    class MenuActionLister implements ActionListener {
+    class MenuActionLister implements ActionListener, Serializable {
+
+        public final String DIR = "./saves";
+        private JFileChooser c;
 
         /**
          * Konstruktor
@@ -222,15 +233,23 @@ public class Game extends JFrame implements ActionListener, KeyListener, Seriali
          * sonst wird es erzeugt.
          */
         public MenuActionLister() {
-            File dir = new File("./saves");
-
+            File dir = new File(DIR);
+            // Schau ob das Verzeichnis schon existiert.
             if (!dir.exists()) {
                 try {
                     dir.mkdir();
-                }catch (Exception e) {
-
+                } catch (Exception e) {
+                    System.err.println("Failed to create DIR:\n\r" + e); // Ausgabe
                 }
             }
+
+            // JFileChoose Einstellungen.
+            c = new JFileChooser(dir);
+            c.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                    "Save Files", "save");
+            c.setFileFilter(filter);
+
         }
 
         @Override
@@ -238,15 +257,88 @@ public class Game extends JFrame implements ActionListener, KeyListener, Seriali
             // Schauen welches Menü Item geklickt wurde.
             switch (e.getActionCommand()) {
                 case "NEW":
+                    // Neues Spiel erstellen.
                     new Game();
                     break;
                 case "EXIT":
+                    // Spiel schliessen.
                     setVisible(false);
                     dispose();
                     break;
                 case "SAVE":
+                    // Spiel Speichern.
+                    // Dialog Fenster optionen setzten und oeffnen.
+                    c.setDialogTitle("Spielstand Speichern unter...");
+                    c.setSelectedFile(new File("game.save"));
+                    c.setApproveButtonText("speichern");
+                    int rVal = c.showOpenDialog(Game.this);
+                    // Schauen ob es erfolgreich war.
+                    if (rVal == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            // Ueberpruefen ob es ein Pfad ist.
+                            if (c.getSelectedFile().isDirectory()) {
+                                JOptionPane.showMessageDialog(Game.this, "Kann Datei nicht als Verzeichnis Speichern.", "Fehler beim Speichern", JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+
+                            String endPrefix = "";
+                            // Ueberpruefen, ob es die Richtige Extension hat.
+                            if (!c.getSelectedFile().getName().substring(c.getSelectedFile().getName().length() - 5).equals(".save"))
+                                endPrefix = ".save";
+
+                            // Datei speichern.
+                            FileOutputStream fs = new FileOutputStream(c.getSelectedFile().getAbsolutePath() + endPrefix);
+                            ObjectOutputStream os = new ObjectOutputStream(fs);
+                            os.writeObject(Game.this.board);
+                            os.writeInt(Game.this.playerIndex);
+                            os.close();
+
+                            fs.flush();
+                            fs.close();
+
+                            // Erfolgsnachricht anzeigen.
+                            JOptionPane.showMessageDialog(Game.this, "Datei erfolgreich gespeichert.", "Speichern erfolgreich", JOptionPane.INFORMATION_MESSAGE);
+                            return;
+                        } catch (Exception ex) {
+                            // Fehlermeldung ausgeben.
+                            JOptionPane.showMessageDialog(Game.this, "Datei konnte nicht gespeichert werden.", "Fehler beim Speichern", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                    }
+
                     break;
                 case "OPEN":
+                    // Spielstand oeffnen.
+                    // Dialog Fenster optionen setzten und oeffnen.
+                    c.setDialogTitle("Spielstand Öffnen");
+                    c.setApproveButtonText("öffnen");
+                    int reVal = c.showOpenDialog(Game.this);
+                    // Schauen ob es erfolgreich war.
+                    if (reVal == JFileChooser.APPROVE_OPTION) {
+                        try {
+                            // Ueberpruefen ob es ein Pfad ist.
+                            if (c.getSelectedFile().isDirectory()) {
+                                JOptionPane.showMessageDialog(Game.this, "Kann Datei nicht als Verzeichnis Speichern.", "Fehler beim Speichern", JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+
+                            // Datei oeffnen.
+                            FileInputStream fs = new FileInputStream(c.getSelectedFile().getAbsolutePath());
+                            ObjectInputStream is = new ObjectInputStream(fs);
+                            Board board = (Board) is.readObject();
+                            int playerIndex = is.readInt();
+                            is.close();
+                            fs.close();
+                            // Derzeitiges Fenster schliessen.
+                            Game.this.setVisible(false);
+                            Game.this.dispose();
+                            // Neues Fenster oeffnen.
+                            new Game(board, playerIndex);
+                        } catch (Exception ex) {
+                            // Fehlermeldung ausgeben.
+                            JOptionPane.showMessageDialog(Game.this, "Datei konnte nicht geöffnet werden.", "Fehler beim Öffnen", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
                     break;
             }
 

@@ -2,13 +2,15 @@ package components;
 
 import utility.BoardObject;
 
+import java.io.Serializable;
+
 /**
  * Stellt einen Spieler dar.
  *
  * @version 1.0
  * @author Daniel Banciu (198632), Felix Ruess (199261), Lukas Reichert (199034)
  */
-public class Player implements BoardObject {
+public class Player implements BoardObject, Serializable {
     private Fraction points;
     private int x;
     private int y;

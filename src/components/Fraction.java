@@ -2,6 +2,7 @@ package components;
 
 import utility.BoardObject;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
 /**
@@ -10,7 +11,7 @@ import java.math.BigInteger;
  * @version 1.0
  * @author Daniel Banciu (198632), Felix Ruess (199261), Lukas Reichert (199034)
  */
-public class Fraction extends Number implements Comparable<Fraction>, BoardObject {
+public class Fraction extends Number implements Comparable<Fraction>, BoardObject, Serializable {
 
     private BigInteger numerator;
     private BigInteger denominator;

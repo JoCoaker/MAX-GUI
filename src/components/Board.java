@@ -5,6 +5,7 @@ import utility.Config;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.Serializable;
 import java.util.Random;
 
 /**
@@ -13,7 +14,7 @@ import java.util.Random;
  * @author Daniel Banciu (198632), Felix Ruess (199261), Lukas Reichert (199034)
  * @version 3.0
  */
-public class Board {
+public class Board implements Serializable {
     private BoardObject[][] tiles;
     private JPanel[][] tilePanels;
 
